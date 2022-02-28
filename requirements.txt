@@ -1,0 +1,5 @@
+pymongo
+polars
+black
+isort
+rich
