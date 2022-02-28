@@ -1,9 +1,10 @@
+import os
 from multiprocessing.sharedctypes import Value
+
 import polars as pl
+from bson.objectid import ObjectId
 from pymongo import MongoClient
 from rich.console import Console
-import os
-from bson.objectid import ObjectId
 
 
 class MongoConnector:
