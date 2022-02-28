@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-import polars as pl
+
 import numpy as np
+import polars as pl
 
 
 class MLModel(ABC):

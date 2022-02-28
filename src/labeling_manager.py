@@ -1,4 +1,8 @@
-from src.database.mongo_connector import MongoConnector
+import json
+
+import polars as pl
+
+from src.database.connectors import MongoConnector
 from src.ml_models.base_model import MLModel
 
 
@@ -13,3 +17,11 @@ class LabelingManager:
 
     def _retrain_model(self):
         ...
+
+    def get_sample(self):
+        json_string = (
+            self.data.filter(pl.col("label").is_null())
+            .sample(n=1)
+            .to_json(to_string=True, json_lines=True)
+        )
+        return json.loads(json_string)
