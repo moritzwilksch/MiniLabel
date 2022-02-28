@@ -1,3 +1,4 @@
+from calendar import c
 import os
 
 import polars as pl
@@ -65,7 +66,7 @@ class MongoConnector:
         for rec in res:
             rec["_id"] = str(rec["_id"])
 
-        return pl.from_dicts(res)
+        return pl.from_dicts(res).with_column(pl.col("label").cast(pl.Utf8))
 
     def update_one(self, id: str, label: str) -> None:
         """

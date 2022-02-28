@@ -35,34 +35,10 @@
     <!-- Main card -->
     <div class="card m-5">
         <div class="card-header text-muted text-monospace">
-            _id = {{item.get("_id")}}
+            ✅ Done!
         </div>
         <div class="card-body">
-            <p class="card-text" style="font-size: 1.25em;">{{item.get("content")}}</p>
-
-
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm">
-                        <form action="label/{{item.get('_id')}}/positive">
-                            <button type="submit" id="button_1" class="btn btn-success">[1] Positive</button>
-                        </form>
-                    </div>
-                    <div class="col-sm">
-
-                        <form action="label/{{item.get('_id')}}/neutral">
-                            <button type="submit" id="button_2" class="btn btn-light">[2] Neutral</button>
-                        </form>
-                    </div>
-                    <div class="col-sm">
-                        <form action="label/{{item.get('_id')}}/negative">
-                            <button type=" submit" id="button_3" class="btn btn-danger">[3] Negative</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-
+            <p class="card-text" style="font-size: 1.25em;">No more data left to label</p>
         </div>
     </div>
     <!-- end of main card -->
@@ -80,19 +56,7 @@
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
 
-    <!-- BEGIN custom script -->
-    <script>
-        document.addEventListener("keypress", function (e) {
-            if (e.keyCode === 49) {
-                document.getElementById("button_1").click();
-            } else if (e.keyCode === 50) {
-                document.getElementById("button_2").click();
-            } else if (e.keyCode === 51) {
-                document.getElementById("button_3").click();
-            }
-        });
-    </script>
-    <!-- END custom script -->
+
 </body>
 
 </html>

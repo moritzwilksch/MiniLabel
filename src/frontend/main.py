@@ -1,14 +1,15 @@
 import imp
 import os
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sklearn.decomposition import non_negative_factorization
-
+from fastapi.responses import RedirectResponse
 from src.database.connectors import MongoConnector
 from src.labeling_manager import LabelingManager
+
 
 app = FastAPI()
 
@@ -33,11 +34,21 @@ manager = LabelingManager(conn, None)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_item(request: Request):
-    item = manager.get_sample()
+    try:
+        item = manager.get_sample()
+    except RuntimeError:
+        print("Done. No more items to label.")
+        return RedirectResponse("/done")
+
     return templates.TemplateResponse("index.html", {"request": request, "item": item})
+
+
+@app.get("/done", response_class=HTMLResponse)
+async def read_item(request: Request):
+    return templates.TemplateResponse("done.html", {"request": request})
 
 
 @app.get("/label/{id}/{label}")
 async def clicked(request: Request, id: str, label: str):
-    manager.update_one(id=id, label=label)
-    return read_item(request)
+    manager.update_one(id_=id, label=label)
+    return RedirectResponse("/")
