@@ -4,3 +4,6 @@ install:
 format:
 	isort .
 	black .
+
+frontend:
+	uvicorn main:app --reload --app-dir src/frontend
