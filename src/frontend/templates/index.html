@@ -38,7 +38,11 @@
         </div>
         <div class="card-body">
             <p class="card-text" style="font-size: 1.25em;">{{item.get("content")}}</p>
-            <button type="button" id="firstButton" class="ml-1 mr-1 btn btn-success">[1] Positive</button>
+
+            <form action="label/{{item.get('_id')}}/positive">
+                <button type="submit" id="firstButton" class="ml-1 mr-1 btn btn-success">[1] Positive</button>
+            </form>
+
             <button type="button" id="firstButton" class="ml-1 mr-1 btn btn-light">[2] Neutral</button>
             <button type="button" id="firstButton" class="ml-1 mr-1 btn btn-danger">[3] Negative</button>
         </div>

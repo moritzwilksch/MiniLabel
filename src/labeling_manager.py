@@ -1,6 +1,7 @@
 import json
 
 import polars as pl
+from bson.objectid import ObjectId
 
 from src.database.connectors import MongoConnector
 from src.ml_models.base_model import MLModel
@@ -25,3 +26,21 @@ class LabelingManager:
             .to_json(to_string=True, json_lines=True)
         )
         return json.loads(json_string)
+
+    def update_one(self, id: str, label: str) -> None:
+        """
+        Update label of one single document with id.
+
+        Args:
+            id: MongoDB ID of the document as str
+            label: Label to set
+        """
+
+        # TODO
+        print(id, label)
+        # update in memory
+        print(self.data)
+        self.data[self.data["_id"] == id, "label"] = label
+
+        # update DB
+        self.db_connector.update_one({"_id": ObjectId(id)}, {"$set": {"label": label}})

@@ -1,7 +1,7 @@
 import imp
 import os
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -35,3 +35,9 @@ manager = LabelingManager(conn, None)
 async def read_item(request: Request):
     item = manager.get_sample()
     return templates.TemplateResponse("index.html", {"request": request, "item": item})
+
+
+@app.get("/label/{id}/{label}")
+async def clicked(request: Request, id: str, label: str):
+    manager.update_one(id=id, label=label)
+    return read_item(request)
