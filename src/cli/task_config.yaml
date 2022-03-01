@@ -1,0 +1,7 @@
+labels:
+  - title: positive
+    number: 1
+  - title: neutral
+    number: 2
+  - title: negative
+    number: 3

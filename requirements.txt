@@ -5,3 +5,5 @@ isort
 rich
 fastapi
 uvicorn
+typer
+pyaml

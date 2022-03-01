@@ -1,6 +1,6 @@
 from calendar import c
 import os
-
+import datetime
 import polars as pl
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -77,7 +77,10 @@ class MongoConnector:
             label: Label to set
         """
 
-        self.collection.update_one({"_id": ObjectId(id)}, {"$set": {"label": label}})
+        self.collection.update_one(
+            {"_id": ObjectId(id)},
+            {"$set": {"label": label, "labeled": datetime.datetime.now()}},
+        )
 
 
 if __name__ == "__main__":
