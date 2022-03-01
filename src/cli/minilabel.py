@@ -4,6 +4,7 @@ from rich.prompt import Prompt
 from rich.align import Align
 from rich.markdown import Markdown
 from rich.style import Style
+from rich.text import Text
 from src.labeling_manager import LabelingManager, MongoConnector
 import os
 import yaml
@@ -48,8 +49,13 @@ class LabelingCLI:
                 _ = Prompt.ask("Press enter to continue")
                 break
 
-            p = Panel(sample.get("content"), title=f"id = {sample['_id']}")
+            p = Panel(
+                sample.get("content"),
+                title=Text(f"id = {sample['_id']}"),
+                border_style=Style(dim=True),
+            )
             self.c.print(p)
+            self.c.print("\n" * 2)
             self.c.print(Align(self.manager.status_as_string(), align="center"))
             self.c.print(
                 Align("[grey]" + legend + "[/]", align="center"), style=Style(dim=True)
