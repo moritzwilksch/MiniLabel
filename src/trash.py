@@ -1,5 +1,6 @@
-from http.client import ImproperConnectionState
 import os
+from http.client import ImproperConnectionState
+
 from src.database.connectors import MongoConnector
 from src.labeling_manager import LabelingManager
 from src.ml_models.naive_bayes import NaiveBayesMLModel
@@ -16,5 +17,8 @@ conn = MongoConnector(
 )
 
 manager = LabelingManager(db_connector=conn, model=NaiveBayesMLModel())
-manager._retrain_model()
+print(manager.get_sample())
+print(manager.get_status())
+
+manager.retrain_model()
 manager._add_sampling_weight()
