@@ -46,7 +46,7 @@ collection = db["dev_coll"]
 collection.drop()
 collection.insert_many(
     clean.rename({"tweet": "content"})
-    .with_column(pl.lit(None).alias("label"))
-    .select(["content", "label"])
+    .with_columns([pl.lit(None).alias("label"), pl.lit(0).alias("entropy")])
+    .select(["content", "label", "entropy"])
     .to_dicts()
 )

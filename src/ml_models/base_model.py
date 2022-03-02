@@ -5,6 +5,9 @@ import polars as pl
 
 
 class MLModel(ABC):
+    def entropy(self, arr: np.ndarray) -> np.ndarray:
+        return -(arr * np.log2(arr)).sum(axis=1)
+
     @abstractmethod
     def preprocess(self, data: pl.DataFrame) -> pl.DataFrame:
         """

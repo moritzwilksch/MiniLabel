@@ -9,10 +9,10 @@ import numpy as np
 
 class NaiveBayesMLModel(MLModel):
     def preprocess(self, data: pl.DataFrame) -> pl.DataFrame:
-        return data
+        return data.filter(pl.col("label").is_not_null())
 
     def fit(self, data: pl.DataFrame) -> None:
-        data = data.to_pandas()
+        data = self.preprocess(data).to_pandas()
 
         pipeline = Pipeline([("vect", CountVectorizer()), ("clf", MultinomialNB())])
 
@@ -26,4 +26,4 @@ class NaiveBayesMLModel(MLModel):
 
         data = data.to_pandas()
 
-        return pipeline.predict_proba(data["content"])
+        return self.entropy(pipeline.predict_proba(data["content"]))

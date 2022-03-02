@@ -10,7 +10,7 @@ from src.ml_models.base_model import MLModel
 class LabelingManager:
     def __init__(self, db_connector: MongoConnector, model: MLModel) -> None:
         self.db_connector = db_connector
-        self.model = MLModel
+        self.model = model
 
         self._load_data_from_db()
         self._current_get_sample_retries = 0
@@ -20,11 +20,11 @@ class LabelingManager:
 
     def _add_sampling_weight(self):
         preds = self.model.predict_uncertainty(self.data)
-        print(preds)
-        self.data.insert_at_idx(-1, pl.Series(preds))
+        self.data.insert_at_idx(0, pl.Series(values=preds, name="sampling_weight"))
 
     def _retrain_model(self):
-        self.model.fit(self.data)
+        self._load_data_from_db()
+        self.model.fit(data=self.data)
 
     def get_sample(self, max_retries=1) -> dict:
         if self._current_get_sample_retries > max_retries:
@@ -32,11 +32,19 @@ class LabelingManager:
             raise RuntimeError("No more data to sample.")
 
         try:
-            json_string = (
-                self.data.filter(pl.col("label").is_null())
-                .sample(n=1)
-                .to_json(to_string=True, json_lines=True)
-            )
+            if "sampling_weight" in self.data.columns:
+                json_string = (
+                    self.data.filter(pl.col("label").is_null())
+                    .sample(n=1)
+                    .to_json(to_string=True, json_lines=True)
+                )
+            else:
+                json_string = (
+                    self.data.filter(pl.col("label").is_null())
+                    .sort("sampling_weight", reverse=True)[0]
+                    .to_json(to_string=True, json_lines=True)
+                )
+
         except RuntimeError:
             print(f"[WARN] No samples found. Re-loading data.")
             self._load_data_from_db()
@@ -63,7 +71,7 @@ class LabelingManager:
         self.data[self.data["_id"] == id_, "label"] = label
 
         # update DB
-        self.db_connector.update_one(id=id_, label=label)
+        self.db_connector.update_one_label(id=id_, label=label)
 
     def get_status(self):
         self._load_data_from_db()

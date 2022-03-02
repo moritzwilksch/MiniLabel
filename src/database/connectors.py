@@ -62,13 +62,29 @@ class MongoConnector:
         Returns:
             Data frame with columns "_id", "content", "label"
         """
-        res = list(self.collection.find({}, {"_id": 1, "content": 1, "label": 1}))
+        # empty str instead of None necessary, otherwise polars.DataFrame.to_dicts() fails
+        # bc of data type issues: only nones -> dtype is bool -> err on first string
+        res = list(
+            self.collection.find(
+                {}, {"label": {"$ifNull": ["$label", ""]}, "_id": 1, "content": 1}
+            )
+        )
+
         for rec in res:
             rec["_id"] = str(rec["_id"])
 
-        return pl.from_dicts(res).with_column(pl.col("label").cast(pl.Utf8))
+        return (
+            pl.from_dicts(res)
+            .with_column(pl.col("label").cast(pl.Utf8))
+            .with_column(
+                pl.when(pl.col("label") == "")
+                .then(None)
+                .otherwise(pl.col("label"))
+                .alias("label")
+            )
+        )
 
-    def update_one(self, id: str, label: str) -> None:
+    def update_one_label(self, id: str, label: str) -> None:
         """
         Update label of one single document with id.
 
