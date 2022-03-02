@@ -1,10 +1,18 @@
 import json
+from dataclasses import dataclass
 
 import polars as pl
 from bson.objectid import ObjectId
+from pymongo import UpdateOne
 
 from src.database.connectors import MongoConnector
 from src.ml_models.base_model import MLModel
+
+
+@dataclass
+class Status:
+    n_labeled: int
+    n_total: int
 
 
 class LabelingManager:
@@ -12,46 +20,42 @@ class LabelingManager:
         self.db_connector = db_connector
         self.model = model
 
-        self._load_data_from_db()
-        self._current_get_sample_retries = 0
-
-    def _load_data_from_db(self):
-        self.data = self.db_connector.load_all_data()
-
     def _add_sampling_weight(self):
-        preds = self.model.predict_uncertainty(self.data)
-        self.data.insert_at_idx(0, pl.Series(values=preds, name="sampling_weight"))
+        """
+        Adds sampling weight "entropy" to all documents in DB.
+        """
+        dataf = self.db_connector.load_all_data()
+        preds = self.model.predict_uncertainty(dataf)
+        dataf.insert_at_idx(0, pl.Series(values=preds, name="entropy"))
 
-    def _retrain_model(self):
-        self._load_data_from_db()
-        self.model.fit(data=self.data)
-
-    def get_sample(self, max_retries=1) -> dict:
-        if self._current_get_sample_retries > max_retries:
-            # TODO: graceful handling of this
-            raise RuntimeError("No more data to sample.")
-
-        try:
-            if "sampling_weight" in self.data.columns:
-                json_string = (
-                    self.data.filter(pl.col("label").is_null())
-                    .sample(n=1)
-                    .to_json(to_string=True, json_lines=True)
+        db_requests = []
+        for row in dataf.to_dicts():
+            db_requests.append(
+                UpdateOne(
+                    {"_id": ObjectId(row["_id"])}, {"$set": {"entropy": row["entropy"]}}
                 )
-            else:
-                json_string = (
-                    self.data.filter(pl.col("label").is_null())
-                    .sort("sampling_weight", reverse=True)[0]
-                    .to_json(to_string=True, json_lines=True)
-                )
+            )
 
-        except RuntimeError:
-            print(f"[WARN] No samples found. Re-loading data.")
-            self._load_data_from_db()
-            self._current_get_sample_retries += 1
-            self.get_sample()  # CAUTION: recursion
+        self.db_connector.collection.bulk_write(db_requests)
 
-        return json.loads(json_string)  # keys: _id, content, label
+    def retrain_model(self):
+        """
+        Loads data from DB and trains model on it
+        """
+        dataf = self.db_connector.load_all_data()
+        self.model.fit(data=dataf)
+
+    def get_sample(self) -> dict:
+        """
+        Gets the sample with highest entropy from DB.
+        """
+        res = list(
+            self.db_connector.collection.find(
+                {"label": None}, sort=[("entropy", -1)], limit=1
+            )
+        )[0]
+
+        return res  # keys: _id, content, label, entropy
 
     def update_one(self, id_: str, label: str) -> None:
         """
@@ -62,22 +66,22 @@ class LabelingManager:
             label: Label to set
         """
 
-        # # TODO
-        # print(id_, label)
-        # # update in memory
-        # print(self.data)
-        # print(self.data[self.data["_id"] == id_])
-
-        self.data[self.data["_id"] == id_, "label"] = label
-
-        # update DB
         self.db_connector.update_one_label(id=id_, label=label)
 
-    def get_status(self):
-        self._load_data_from_db()
-        return self.data.groupby("label").count()
+    def get_status(self) -> Status:
+        """
+        Return job status.
+        """
+        return Status(
+            n_labeled=self.db_connector.collection.count_documents(
+                {"label": {"$ne": None}}
+            ),
+            n_total=self.db_connector.collection.count_documents({}),
+        )
 
-    def status_as_string(self):
-        n_unlabeled = len(self.data.filter(pl.col("label").is_null()))
-        n_labeled = len(self.data.filter(pl.col("label").is_not_null()))
-        return f"Labeled {n_labeled:,} documents. There are {n_unlabeled:,} unlabeled documents."
+    def status_as_string(self) -> str:
+        """
+        Return job status as str for display in CLI
+        """
+        status = self.get_status()
+        return f"Labeled {status.n_labeled:,} documents. There are {status.n_total - status.n_labeled:,} unlabeled documents. (Total: {status.n_total:,})"

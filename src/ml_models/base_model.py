@@ -6,6 +6,9 @@ import polars as pl
 
 class MLModel(ABC):
     def entropy(self, arr: np.ndarray) -> np.ndarray:
+        """
+        Calculates entropy of a probability distribution row-wise.
+        """
         return -(arr * np.log2(arr)).sum(axis=1)
 
     @abstractmethod
