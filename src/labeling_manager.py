@@ -19,10 +19,12 @@ class LabelingManager:
         self.data = self.db_connector.load_all_data()
 
     def _add_sampling_weight(self):
-        ...
+        preds = self.model.predict_uncertainty(self.data)
+        print(preds)
+        self.data.insert_at_idx(-1, pl.Series(preds))
 
     def _retrain_model(self):
-        ...
+        self.model.fit(self.data)
 
     def get_sample(self, max_retries=1) -> dict:
         if self._current_get_sample_retries > max_retries:

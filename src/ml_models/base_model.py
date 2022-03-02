@@ -6,6 +6,13 @@ import polars as pl
 
 class MLModel(ABC):
     @abstractmethod
+    def preprocess(self, data: pl.DataFrame) -> pl.DataFrame:
+        """
+        Preprocess data.
+        """
+        pass
+
+    @abstractmethod
     def fit(self, data: pl.DataFrame) -> None:
         """
         Fits model on data.
