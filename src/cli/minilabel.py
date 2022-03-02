@@ -36,22 +36,26 @@ class LabelingCLI:
         return option
 
     def start_labeling(self):
-        legend = "  ".join(
-            f"{x['number']}...{x['title']}" for x in CONFIG.get("labels")
-        )
+        legend = "  ".join(f"{x['number']}...{x['title']}" for x in CONFIG.get("labels"))
         number_label_mapping = {
             e.get("number"): e.get("title") for e in CONFIG.get("labels")
         }
 
+        sample_history = list()
+        review_mode = False
+
         while True:
             self.c.clear()
-
-            try:
-                sample = self.manager.get_sample()
-            except RuntimeError:
-                self.c.print("No more data to sample.")
-                _ = Prompt.ask("Press enter to continue")
-                break
+            if review_mode:
+                sample = sample_history[-1]
+                review_mode = False
+            else:
+                try:
+                    sample = self.manager.get_sample()
+                except RuntimeError:
+                    self.c.print("No more data to sample.")
+                    _ = Prompt.ask("Press enter to continue")
+                    break
 
             p = Panel(
                 sample.get("content"),
@@ -65,13 +69,17 @@ class LabelingCLI:
                 Align("[grey]" + legend + "[/]", align="center"), style=Style(dim=True)
             )
 
-            choice = Prompt.ask("Choose", choices=["1", "2", "3", "q"])
+            choice = Prompt.ask("Choose", choices=["1", "2", "3", "q", "b"])
             if choice == "q":
                 break
+            if choice == "b":
+                review_mode = True
+                continue
             else:
                 self.manager.update_one(
                     sample["_id"], number_label_mapping.get(int(choice))
                 )
+                sample_history.append(sample)
 
     def run(self):
         while True:
