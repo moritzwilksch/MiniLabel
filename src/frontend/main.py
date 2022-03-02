@@ -2,14 +2,13 @@ import imp
 import os
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sklearn.decomposition import non_negative_factorization
-from fastapi.responses import RedirectResponse
+
 from src.database.connectors import MongoConnector
 from src.labeling_manager import LabelingManager
-
 
 app = FastAPI()
 

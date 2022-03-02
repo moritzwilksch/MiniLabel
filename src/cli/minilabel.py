@@ -1,13 +1,15 @@
+import os
+
+import yaml
+from rich.align import Align
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.align import Align
-from rich.markdown import Markdown
 from rich.style import Style
 from rich.text import Text
+
 from src.labeling_manager import LabelingManager, MongoConnector
-import os
-import yaml
 
 with open("src/cli/task_config.yaml") as f:
     CONFIG = yaml.safe_load(f)
@@ -34,7 +36,9 @@ class LabelingCLI:
         return option
 
     def start_labeling(self):
-        legend = "  ".join(f"{x['number']}...{x['title']}" for x in CONFIG.get("labels"))
+        legend = "  ".join(
+            f"{x['number']}...{x['title']}" for x in CONFIG.get("labels")
+        )
         number_label_mapping = {
             e.get("number"): e.get("title") for e in CONFIG.get("labels")
         }

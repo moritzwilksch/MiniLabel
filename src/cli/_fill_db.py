@@ -1,5 +1,6 @@
-import polars as pl
 import os
+
+import polars as pl
 from pymongo import MongoClient
 
 df = pl.read_csv("data/tsla_tweets.csv")
