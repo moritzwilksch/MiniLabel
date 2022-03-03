@@ -28,6 +28,7 @@ class LabelingCLI:
         self.c.print("- 🚀 (1) Start labeling")
         self.c.print("- 📊 (2) Show stats")
         self.c.print("- 💿 (3) Show DB connection")
+        self.c.print("- 🤖 (4) Train model")
         self.c.print()
         option = Prompt.ask("Choose option", choices=["1", "2", "3", "q"])
         self.c.clear()
@@ -86,6 +87,10 @@ class LabelingCLI:
                 print(
                     f"MongoDB connection: user = {user[:5]}..., password = {password[:5]}..."
                 )
+                _ = Prompt.ask("Press enter to continue")
+
+            elif option == "4":
+                pass  # TODO: implement
                 _ = Prompt.ask("Press enter to continue")
 
 
