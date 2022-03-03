@@ -1,4 +1,5 @@
 import os
+
 from pymongo import MongoClient
 
 user = os.getenv("MONGO_INITDB_ROOT_USERNAME")

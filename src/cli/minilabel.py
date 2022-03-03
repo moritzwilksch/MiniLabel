@@ -1,13 +1,15 @@
+import os
+
+import yaml
+from rich.align import Align
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.align import Align
-from rich.markdown import Markdown
 from rich.style import Style
 from rich.text import Text
+
 from src.labeling_manager import LabelingManager, MongoConnector
-import os
-import yaml
 
 with open("src/cli/task_config.yaml") as f:
     CONFIG = yaml.safe_load(f)
@@ -40,15 +42,21 @@ class LabelingCLI:
             e.get("number"): e.get("title") for e in CONFIG.get("labels")
         }
 
+        sample_history = list()
+        review_mode = False
+
         while True:
             self.c.clear()
-
-            try:
-                sample = self.manager.get_sample()
-            except RuntimeError:
-                self.c.print("No more data to sample.")
-                _ = Prompt.ask("Press enter to continue")
-                break
+            if review_mode:
+                sample = sample_history[-1]
+                review_mode = False
+            else:
+                try:
+                    sample = self.manager.get_sample()
+                except RuntimeError:
+                    self.c.print("No more data to sample.")
+                    _ = Prompt.ask("Press enter to continue")
+                    break
 
             p = Panel(
                 sample.get("content"),
@@ -62,13 +70,17 @@ class LabelingCLI:
                 Align("[grey]" + legend + "[/]", align="center"), style=Style(dim=True)
             )
 
-            choice = Prompt.ask("Choose", choices=["1", "2", "3", "q"])
+            choice = Prompt.ask("Choose", choices=["1", "2", "3", "q", "b"])
             if choice == "q":
                 break
+            if choice == "b":
+                review_mode = True
+                continue
             else:
                 self.manager.update_one(
                     sample["_id"], number_label_mapping.get(int(choice))
                 )
+                sample_history.append(sample)
 
     def run(self):
         while True:
