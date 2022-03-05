@@ -10,6 +10,7 @@ from rich.style import Style
 from rich.text import Text
 
 from src.labeling_manager import LabelingManager, MongoConnector
+from src.ml_models.naive_bayes import NaiveBayesMLModel
 
 with open("src/cli/task_config.yaml") as f:
     CONFIG = yaml.safe_load(f)
@@ -32,12 +33,14 @@ class LabelingCLI:
         self.c.print("- 💿 (3) Show DB connection")
         self.c.print("- 🤖 (4) Train model")
         self.c.print()
-        option = Prompt.ask("Choose option", choices=["1", "2", "3", "q"])
+        option = Prompt.ask("Choose option", choices=["1", "2", "3", "4", "q"])
         self.c.clear()
         return option
 
     def start_labeling(self):
-        legend = "  ".join(f"{x['number']}...{x['title']}" for x in CONFIG.get("labels"))
+        legend = "  ".join(
+            f"{x['number']}...{x['title']}" for x in CONFIG.get("labels")
+        )
         number_label_mapping = {
             e.get("number"): e.get("title") for e in CONFIG.get("labels")
         }
@@ -102,7 +105,9 @@ class LabelingCLI:
                 _ = Prompt.ask("Press enter to continue")
 
             elif option == "4":
-                pass  # TODO: implement
+                print(f"Starting training...")
+                self.manager.retrain_model()
+                print(f"Training finished.")
                 _ = Prompt.ask("Press enter to continue")
 
 
@@ -118,7 +123,7 @@ if __name__ == "__main__":
         collection="dev_coll",
     )
 
-    manager = LabelingManager(db_connector=conn, model=None)
+    manager = LabelingManager(db_connector=conn, model=NaiveBayesMLModel())
     c = Console()
     cli = LabelingCLI(conn, manager, c)
     cli.run()
